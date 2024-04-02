@@ -19,7 +19,7 @@ services:
     command: /startup
 
   db:
-    image: postgres:15
+    image: postgis/postgis:15-3.3-alpine
     container_name: alma-db
     restart: always
     volumes:

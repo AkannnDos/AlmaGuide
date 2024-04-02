@@ -4,6 +4,12 @@ FROM python:3.12.2-slim-bookworm AS base
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends  \
+    gcc  \
+    libpq-dev  \
+    libgdal-dev
+
 # Set the working directory
 WORKDIR /app/
 
