@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: alma-back
+    container_name: alma-backend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./src:/app
+    command: /startup
+
+  db:
+    image: postgres:15
+    container_name: alma-db
+    restart: always
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+
+volumes:
+  local_postgres_data: {}

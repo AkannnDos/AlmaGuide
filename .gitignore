@@ -1,0 +1,33 @@
+# byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# tests and coverage
+*.pytest_cache
+.coverage
+
+# database & logs
+*.db
+*.sqlite3
+*.log
+*.bak
+*.dat
+*.dir
+celerybeat-schedule
+
+*.env
+
+# other
+.DS_Store
+.vscode/
+*media/
+env/
+.venv/
+venv/
+data/
+.idea/
+
+# javascript
+package-lock.json
+
+Pipfile
