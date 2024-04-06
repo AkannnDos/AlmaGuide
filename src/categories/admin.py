@@ -12,6 +12,8 @@ class CategoryAdmin(admin.ModelAdmin):
     def get_name(self, obj):
         return getattr(obj, f'name_{self.request.LANGUAGE_CODE}')
     
+    get_name.short_description = _('Name')
+
     def get_queryset(self, request):
         self.request = request
         return super().get_queryset(request)
@@ -25,13 +27,13 @@ class SubcategoryAdmin(admin.ModelAdmin):
     def get_name(self, obj):
         return getattr(obj, f'name_{self.request.LANGUAGE_CODE}')
     
-    get_name.shor_description = _('Name')
+    get_name.short_description = _('Name')
     
     def get_category(self, obj):
         category = obj.category
         return getattr(category, f'name_{self.request.LANGUAGE_CODE}')
     
-    get_category.shor_description = _('Category')
+    get_category.short_description = _('Category')
     
     def get_queryset(self, request):
         self.request = request

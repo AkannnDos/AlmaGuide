@@ -1,9 +1,21 @@
 from django.contrib.gis.db import models as geomodels
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language
 
 
-class BaseModel(models.Model):
+class ModelDisplayMixin:
+
+    def __str__(self):
+        language_code = get_language()
+        if hasattr(self, f'name_{language_code}'):
+            return getattr(self, f'name_{language_code}')
+        if hasattr(self, f'title_{language_code}'):
+            return getattr(self, f'title_{language_code}')
+        return super().__str__()
+
+
+class BaseModel(ModelDisplayMixin, models.Model):
     created_at = models.DateTimeField(auto_now_add=True,
                                       verbose_name=_('Created At'))
     updated_at = models.DateTimeField(auto_now=True,
@@ -13,7 +25,7 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class BaseGeoModel(geomodels.Model):
+class BaseGeoModel(ModelDisplayMixin, geomodels.Model):
     created_at = models.DateTimeField(auto_now_add=True,
                                       verbose_name=_('Created At'))
     updated_at = models.DateTimeField(auto_now=True,

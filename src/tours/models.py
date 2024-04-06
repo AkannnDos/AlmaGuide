@@ -15,8 +15,12 @@ class Tour(BaseModel):
     price = models.IntegerField(verbose_name=_('Price'))
     duration = models.IntegerField(verbose_name=_('Duration'))
     avg_rate = models.FloatField(default=5.0, verbose_name=_('Avarage rate'))
-    way_to_travel = models.CharField(max_length=255,
-                                     verbose_name=_('Way to travel'))
+    way_to_travel_en = models.CharField(max_length=255,
+                                        verbose_name=_('Way to travel EN'))
+    way_to_travel_ru = models.CharField(max_length=255,
+                                        verbose_name=_('Way to travel RU'))
+    way_to_travel_kk = models.CharField(max_length=255,
+                                        verbose_name=_('Way to travel KK'))
 
     class Meta:
         verbose_name = _('Tour')

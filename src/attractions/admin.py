@@ -28,7 +28,7 @@ class AttractionAdmin(geoadmin.GISModelAdmin):
     def get_name(self, obj):
         return getattr(obj, f'name_{self.request.LANGUAGE_CODE}')
     
-    get_name.shor_description = _('Name')
+    get_name.short_description = _('Name')
 
     def get_queryset(self, request):
         self.request = request
