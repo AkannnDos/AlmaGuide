@@ -41,6 +41,10 @@ INSTALLED_APPS = [
     'attractions.apps.AttractionsConfig',
     'categories.apps.CategoriesConfig',
     'users.apps.UsersConfig',
+    'reviews.apps.ReviewsConfig',
+    'tours.apps.ToursConfig',
+    'orders.apps.OrdersConfig',
+    'stories.apps.StoriesConfig',
 ]
 
 MIDDLEWARE = [
