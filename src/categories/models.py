@@ -17,7 +17,7 @@ class Category(BaseModel):
                                      verbose_name=_('Is popular'),
                                      help_text=_('Only 8 categories can be '
                                                  'popular'))
-    
+
     class Meta:
         verbose_name = _('Category')
         verbose_name_plural = _('Categories')
@@ -31,6 +31,9 @@ class Subcategory(BaseModel):
     category = models.ForeignKey(Category, on_delete=models.CASCADE,
                                  verbose_name=_('Caregory'),
                                  related_name='subcategories')
+    
+    order = models.IntegerField(default=0, verbose_name=_('Ordering'),
+                                help_text=_('used for ordering on main page'))
 
     class Meta:
         verbose_name = _('Subcategory')

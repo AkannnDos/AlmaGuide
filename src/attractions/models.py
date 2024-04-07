@@ -1,5 +1,8 @@
+from typing import Iterable
 from django.contrib.gis.db import models as geomodels
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
 from utils.choices import ValueChoices
@@ -17,7 +20,7 @@ class Attraction(BaseGeoModel):
     description_kk = geomodels.TextField(blank=True, null=True,
                                       verbose_name=_('Description KK'))
     image = models.ImageField(upload_to='attractions/', verbose_name=_('Image'))
-    subcategory_id = geomodels.ForeignKey('categories.Subcategory',
+    subcategory = geomodels.ForeignKey('categories.Subcategory',
                                        on_delete=models.CASCADE,
                                        verbose_name=_('Subcategory'),
                                        related_name='attractions')
@@ -25,6 +28,15 @@ class Attraction(BaseGeoModel):
                                    verbose_name=_('Avarage rating'))
     location = geomodels.PointField(verbose_name=_('Location'), srid=4326,
                           geography=True)
+    is_main = geomodels.BooleanField(default=True,
+                                     verbose_name=_('Show as big'),
+                                     help_text=_('if checked, then another '
+                                                 'checked attraction will '
+                                                 'be unchecked'))
+    is_on_main = geomodels.BooleanField(default=True,
+                                        verbose_name=_('Show on main page'),
+                                        help_text=_('there can be only 2 '
+                                                    'checked in one subcategory'))
 
     class Meta:
         verbose_name = _('Attraction')
@@ -63,3 +75,23 @@ class ChoseAttraction(BaseModel):
         verbose_name = _('Attraction chosen')
         verbose_name_plural = _('Attractions choosen')
         db_table = 'chosen_attraction'
+
+
+@receiver(post_save, sender=Attraction)
+def after_attraction_save(sender, instance, created, **kwargs):
+    if instance.is_main:
+        # Если существует другой объект с полем is_main, то меняем его на False
+        # Чтобы всегда был только один такой объект
+        old_is_main = Attraction.objects.filter(is_main=True).exclude(
+            pk=instance.pk)
+        old_is_main.update(is_main=False)
+    if instance.is_on_main:
+        # Если существует другие объекты с полем is_on_main, то меняем старую по дате обновления на False
+        # Чтобы всегда были только две таких объектов в пределах подкатегории
+        another_attractions = Attraction.objects.filter(
+            is_on_main=True).exclude(pk=instance.pk).order_by('updated_at')
+        if another_attractions.count() >= 2:
+            # если таких объектов больше или ровно 2, то старую меням на False
+            to_change = another_attractions.first()
+            Attraction.objects.filter(id=to_change.id).update(
+                is_on_main=False)

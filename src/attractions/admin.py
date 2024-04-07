@@ -13,8 +13,8 @@ class DetailInline(admin.TabularInline):
 
 @admin.register(Attraction)
 class AttractionAdmin(geoadmin.GISModelAdmin):
-    list_display = ('id', 'get_name', 'created_at')
-    list_display_links = ('id', 'get_name', 'created_at')
+    list_display = ('id', 'get_name', 'is_main', 'created_at')
+    list_display_links = ('id', 'get_name', 'is_main' ,'created_at')
     inlines = [DetailInline]
 
     gis_widget_kwargs = {

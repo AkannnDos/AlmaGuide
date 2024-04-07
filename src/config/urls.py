@@ -23,6 +23,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('api/auth/', include('djoser.urls.jwt')),
+    path('api/attractions/', include('attractions.urls')),
+    path('api/categories/', include('categories.urls')),
     path('api/stories/', include('stories.urls')),
     path('api/swagger/', schema_view.with_ui('swagger', cache_timeout=0),
          name='schema-swagger'),
