@@ -8,6 +8,7 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet
 
+from attractions.filters import AttractionFilterSet
 from attractions.models import Attraction, Detail
 from attractions.serializers import (
     AttractionListSerializer, AttractionDetailSerializer
@@ -18,6 +19,8 @@ from utils.manual_parameters import QUERY_LATITUDE, QUERY_LONGITUDE
 class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     serializer_class = AttractionListSerializer
     permission_classes = (AllowAny, )
+    filterset_class = AttractionFilterSet
+
 
     # defaul values
     latitude = 43.237099
