@@ -175,8 +175,12 @@ DRF_STANDARDIZED_ERRORS = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5) if not DEBUG else timedelta(
+        days=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1) if not DEBUG else timedelta(
+        days=30),
+
+    "ROTATE_REFRESH_TOKENS": True,
 }
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
