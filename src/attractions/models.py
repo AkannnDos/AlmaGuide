@@ -16,6 +16,7 @@ class Attraction(BaseGeoModel):
                                       verbose_name=_('Description RU'))
     description_kk = geomodels.TextField(blank=True, null=True,
                                       verbose_name=_('Description KK'))
+    image = models.ImageField(upload_to='attractions/', verbose_name=_('Image'))
     subcategory_id = geomodels.ForeignKey('categories.Subcategory',
                                        on_delete=models.CASCADE,
                                        verbose_name=_('Subcategory'),
@@ -38,7 +39,9 @@ class Detail(BaseModel):
     name_en = models.CharField(max_length=255, verbose_name=_('Name EN'))
     name_ru = models.CharField(max_length=255, verbose_name=_('Name RU'))
     name_kk = models.CharField(max_length=255, verbose_name=_('Name KK'))
-    value = models.CharField(max_length=255, verbose_name=_('Value'))
+    value_en = models.CharField(max_length=255, verbose_name=_('Value EN'))
+    value_ru = models.CharField(max_length=255, verbose_name=_('Value RU'))
+    value_kk = models.CharField(max_length=255, verbose_name=_('Value KK'))
     value_type = models.CharField(max_length=255, choices=ValueChoices.choices,
                                   default=ValueChoices.TEXT)
 
