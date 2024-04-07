@@ -1,7 +1,7 @@
 from django.db.models import F
 
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet
 
 from tours.models import Tour
