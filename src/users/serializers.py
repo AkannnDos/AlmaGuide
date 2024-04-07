@@ -24,3 +24,8 @@ class SignUpResponseSerializer(serializers.Serializer):
     user_data = UserCreateSerializer()
     refresh = serializers.CharField()
     access = serializers.CharField()
+
+
+class UserSerializer(serializers.Serializer):
+    full_name = serializers.CharField()
+    photo = serializers.ImageField()
