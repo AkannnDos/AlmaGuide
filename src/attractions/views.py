@@ -4,7 +4,10 @@ from django.db.models import Prefetch, F
 
 from drf_yasg.utils import swagger_auto_schema
 
+from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet
 
@@ -69,3 +72,13 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         self.longitude = float(query_params.get('lng'))
         return super().retrieve(request, *args, **kwargs)
 
+    @swagger_auto_schema(
+        manual_parameters=[QUERY_LATITUDE, QUERY_LONGITUDE]
+    )
+    @action(methods=['get'], detail=False, url_name='main', url_path='main')
+    def get_main(self, request, *args, **kwargs):
+        query_params = request.query_params.dict()
+        self.latitude = float(query_params.get('lat'))
+        self.longitude = float(query_params.get('lng'))
+        instance = get_object_or_404(self.get_queryset(), **{'is_main': True})
+        return Response(self.get_serializer(instance).data)
