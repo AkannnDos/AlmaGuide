@@ -2,9 +2,12 @@ from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
 from django.db.models import Prefetch, F
 
+from django_filters.rest_framework import DjangoFilterBackend
+
 from drf_yasg.utils import swagger_auto_schema
 
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
@@ -23,6 +26,8 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     serializer_class = AttractionListSerializer
     permission_classes = (AllowAny, )
     filterset_class = AttractionFilterSet
+    filter_backends = (DjangoFilterBackend, OrderingFilter,)
+    ordering_fields = ('avg_rate', 'name', 'distance')
 
 
     # defaul values
@@ -40,7 +45,8 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
             name=F(f'name_{self.request.LANGUAGE_CODE}'),
             description=F(f'description_{self.request.LANGUAGE_CODE}'),
             distance=Distance('location', user_location),
-            category_icon=F('subcategory__category__icon')
+        ).select_related(
+            'subcategory__category'
         )
         if self.action == 'retrieve':
             return qs.prefetch_related(

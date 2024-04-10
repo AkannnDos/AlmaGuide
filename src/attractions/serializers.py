@@ -6,12 +6,20 @@ from utils.choices import ValueChoices
 class AttractionListSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     image = serializers.ImageField()
+    name = serializers.CharField()
     distance = serializers.SerializerMethodField()
-    category_icon = serializers.ImageField()
+    category_icon = serializers.SerializerMethodField()
     avg_rate = serializers.DecimalField(max_digits=3, decimal_places=2)
 
     def get_distance(self, instance):
         return str(instance.distance.m)
+    
+    def get_category_icon(self, instance):
+        if instance.subcategory.category.icon:
+            request = self.context.get('request')
+            icon_url = instance.subcategory.category.icon.url
+            return request.build_absolute_uri(icon_url)
+        return None
     
 
 class DetailSerializer(serializers.Serializer):
