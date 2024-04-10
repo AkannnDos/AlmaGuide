@@ -4,14 +4,37 @@ from django.db.models import Prefetch, F
 
 from drf_yasg.utils import swagger_auto_schema
 
+from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin
+from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet
 
 from attractions.models import Attraction
-from categories.models import Subcategory
-from categories.serializers import SubcategoryListSerializer
+from categories.models import Category, Subcategory
+from categories.serializers import (
+    CategoryListSerializer, SubcategoryListSerializer
+)
 from utils.manual_parameters import QUERY_LATITUDE, QUERY_LONGITUDE
+
+
+class CategoryViewSet(ListModelMixin, GenericViewSet):
+    serializer_class = CategoryListSerializer
+    permission_classes = (AllowAny, )
+    
+    def get_queryset(self):
+        return Category.objects.filter(is_popular=False).annotate(
+            name=F(f'name_{self.request.LANGUAGE_CODE}')
+        )
+
+    @action(methods=['get'], detail=False, url_name='popular',
+            url_path='popular')
+    def get_popular_list(self, request, *args, **kwargs):
+        qs = Category.objects.filter(is_popular=True).annotate(
+            name=F(f'name_{self.request.LANGUAGE_CODE}')
+        )
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
 
 
 class SubcategoryListView(ListModelMixin, GenericViewSet):
