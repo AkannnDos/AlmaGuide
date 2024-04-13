@@ -54,7 +54,8 @@ class SubcategoryListView(ListModelMixin, GenericViewSet):
                 'attractions',
                 queryset=Attraction.objects.filter(is_on_main=True).annotate(
                     category_icon=F('subcategory__category__icon'),
-                    distance=Distance('location', user_location)
+                    distance=Distance('location', user_location),
+                    name=F(f'name_{self.request.LANGUAGE_CODE}')
                 )
             )
         )
