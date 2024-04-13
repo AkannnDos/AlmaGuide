@@ -13,8 +13,9 @@ from rest_framework.viewsets import GenericViewSet
 from attractions.models import Attraction
 from categories.models import Category, Subcategory
 from categories.serializers import (
-    CategoryListSerializer, SubcategoryListSerializer
+    CategoryListSerializer, SubcategoryListSerializer, SubcategoriesSerializer
 )
+from categories.filters import SubcategoryFilterSet
 from utils.manual_parameters import QUERY_LATITUDE, QUERY_LONGITUDE
 
 
@@ -40,16 +41,27 @@ class CategoryViewSet(ListModelMixin, GenericViewSet):
 class SubcategoryListView(ListModelMixin, GenericViewSet):
     serializer_class = SubcategoryListSerializer
     permission_classes = (AllowAny, )
+    filterset_class = SubcategoryFilterSet
 
     # defaul values
     latitude = 43.237099
     longitude = 76.906639
 
+    def get_serializer_class(self):
+        if self.action == 'get_subcategories':
+            return SubcategoriesSerializer
+        return super().get_serializer_class()
+
     def get_queryset(self):
         user_location = Point(self.longitude, self.latitude, srid=4326)
-        return Subcategory.objects.order_by('order').annotate(
+        queryset = Subcategory.objects.order_by('order').annotate(
             name=F(f'name_{self.request.LANGUAGE_CODE}')
-        ).prefetch_related(
+        ).select_related(
+            'category'
+        )
+        if self.action == 'get_subcategories':
+            return queryset
+        return queryset.prefetch_related(
             Prefetch(
                 'attractions',
                 queryset=Attraction.objects.filter(is_on_main=True).annotate(
@@ -68,3 +80,16 @@ class SubcategoryListView(ListModelMixin, GenericViewSet):
         self.latitude = float(query_params.get('lat'))
         self.longitude = float(query_params.get('lng'))
         return super().list(request, *args, **kwargs)
+    
+    @swagger_auto_schema(
+        manual_parameters=[QUERY_LATITUDE, QUERY_LONGITUDE]
+    )
+    @action(methods=['get'], detail=False, url_name='subcategories',
+            url_path='list')
+    def get_subcategories(self, request, *args, **kwargs):
+        query_params = request.query_params.dict()
+        self.latitude = float(query_params.get('lat'))
+        self.longitude = float(query_params.get('lng'))
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

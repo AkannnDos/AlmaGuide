@@ -3,11 +3,12 @@ from django.contrib.auth.models import update_last_login
 from drf_yasg.utils import swagger_auto_schema
 
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ViewSet
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -38,3 +39,18 @@ class SignUpView(CreateModelMixin, GenericViewSet):
         }
         update_last_login(None, instance)
         return Response(data, status=status.HTTP_201_CREATED)
+    
+
+class ProfileView(ViewSet):
+    permission_classes = (IsAuthenticated,)
+
+    @action(methods=['get'], detail=False, url_name='profile', url_path='me')
+    @swagger_auto_schema(
+        responses={
+            200: UserCreateSerializer()
+        }
+    )
+    def me(self, request):
+        serializer = UserCreateSerializer(request.user,
+                                          context={'request': request})
+        return Response(serializer.data)
