@@ -42,8 +42,6 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return AttractionDetailSerializer
-        if self.action == 'chose_attraction':
-            return ChosenAttractionSerializer
         return super().get_serializer_class()
 
     def get_queryset(self):
@@ -236,7 +234,7 @@ class RouteViewSet(ListModelMixin, GenericViewSet):
             'subcategory__category'
         ).order_by('distance')
         serializer = AttractionListSerializer(
-            queryset, many=True,context=self.get_serializer_context())
+            queryset, many=True, context=self.get_serializer_context())
         return Response(serializer.data)
 
     @swagger_auto_schema(

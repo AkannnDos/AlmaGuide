@@ -40,5 +40,4 @@ class CustomUserAdmin(UserAdmin):
 
     search_fields = ('full_name', 'phone_number', 'email')
     ordering = ('-id',)
-    filter_horizontal = ()
     change_password_form = AdminPasswordChangeForm

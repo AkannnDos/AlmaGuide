@@ -33,7 +33,8 @@ class StoryViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
             title=F(f'title_{self.request.LANGUAGE_CODE}'),
             seen_count=seen_count  # аннотация количества просмотренных
         ).order_by(
-            'seen_count'  # сортировка по возрастанию количество просмотров текущим пользователем; если уже просмотрел то последний в списке
+            'seen_count',  # сортировка по возрастанию количество просмотров текущим пользователем; если уже просмотрел то последний в списке
+            '-created_at',
         )
 
     def retrieve(self, request, *args, **kwargs):
