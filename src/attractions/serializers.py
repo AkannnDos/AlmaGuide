@@ -62,3 +62,7 @@ class RouteListSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
     created_at = serializers.DateTimeField(read_only=True)
+
+
+class YandexResponseSerializer(serializers.Serializer):
+    url = serializers.URLField()

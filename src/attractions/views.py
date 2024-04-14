@@ -20,7 +20,8 @@ from attractions.filters import AttractionFilterSet
 from attractions.models import Attraction, ChoseAttraction, Detail, Route
 from attractions.serializers import (
     AttractionListSerializer, AttractionDetailSerializer,
-    ChosenAttractionSerializer, MakeRouteSerializer, RouteListSerializer
+    ChosenAttractionSerializer, MakeRouteSerializer, RouteListSerializer,
+    YandexResponseSerializer
 )
 from utils.manual_parameters import QUERY_LATITUDE, QUERY_LONGITUDE
 
@@ -165,13 +166,29 @@ class RouteViewSet(ListModelMixin, GenericViewSet):
             name=F(f'name_{self.request.LANGUAGE_CODE}'),
         ).order_by('-created_at')
     
+    def _get_map_url(self, latitude, longitude, queryset):
+        url = 'https://yandex.kz/maps/162/almaty/'
+
+        current_location = f'{longitude},{latitude}'
+        current_local_location = f'{latitude},{longitude}'
+        rtext = '~'.join([
+            f'{obj.location.coords[1]},{obj.location.coords[0]}'
+            for obj in queryset
+        ])
+
+        url_query = f'?l=trf%2Ctrfe&ll={current_location}&mode=routes' \
+                    f'&rtext={current_local_location}~{rtext}&rtt=auto' \
+                    f'&ruri=~~&z=13.98'
+        return url + url_query
+    
     @action(methods=['post'], detail=False, url_name='make-routes',
             url_path='make')
     def make_route(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user_location = Point(serializer.validated_data['lat'],
-                              serializer.validated_data['lng'], srid=4326)
+        latitude = serializer.validated_data['lat']
+        longitude = serializer.validated_data['lng']
+        user_location = Point(latitude, longitude, srid=4326)
 
         chosen_attractions = ChoseAttraction.objects.annotate(
             distance=Distance('attraction__location', user_location),
@@ -190,8 +207,60 @@ class RouteViewSet(ListModelMixin, GenericViewSet):
                 name_ru=last.attraction.name_ru,
                 name_kk=last.attraction.name_kk
             )
+            queryset = [item.attraction for item in chosen_attractions]
             chosen_attractions.update(route=route)
-            return Response({'message': 'created'})
+            return Response({
+                'url': self._get_map_url(latitude, longitude, queryset)
+            })
         raise PermissionDenied
     
+    @swagger_auto_schema(
+        manual_parameters=[QUERY_LATITUDE, QUERY_LONGITUDE]
+    )
+    @action(methods=['get'], detail=True, url_name='route-attractions',
+            url_path='attractions')
+    def get_attractions(self, request, *args, **kwargs):
+        query_params = request.query_params.dict()
+        latitude = float(query_params.get('lat'))
+        longitude = float(query_params.get('lng'))
+        pk = kwargs['pk']
+        user_location = Point(longitude, latitude, srid=4326)
+        queryset = Attraction.objects.filter(
+            users_chosen__route_id=pk,
+            users_chosen__user=self.request.user,
+        ).annotate(
+            name=F(f'name_{self.request.LANGUAGE_CODE}'),
+            description=F(f'description_{self.request.LANGUAGE_CODE}'),
+            distance=Distance('location', user_location),
+        ).select_related(
+            'subcategory__category'
+        ).order_by('distance')
+        serializer = AttractionListSerializer(
+            queryset, many=True,context=self.get_serializer_context())
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        manual_parameters=[QUERY_LATITUDE, QUERY_LONGITUDE],
+        responses={
+            200: YandexResponseSerializer()
+        }
+    )
+    @action(methods=['get'], detail=True, url_name='yandex-maps',
+            url_path='yandex')
+    def get_yandex_url(self, request, *args, **kwargs):
+        query_params = request.query_params.dict()
+        latitude = float(query_params.get('lat'))
+        longitude = float(query_params.get('lng'))
+        pk = kwargs['pk']
+        user_location = Point(longitude, latitude, srid=4326)
+        queryset = Attraction.objects.filter(
+            users_chosen__route_id=pk,
+            users_chosen__user=self.request.user,
+        ).annotate(
+            distance=Distance('location', user_location),
+        ).order_by('distance')
+        return Response({
+            'url': self._get_map_url(latitude, longitude, queryset)
+        })
+        
 
