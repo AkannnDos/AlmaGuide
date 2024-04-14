@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from attractions.models import ChoseAttraction
+
 from utils.choices import ValueChoices
 
 
@@ -42,3 +44,21 @@ class AttractionDetailSerializer(AttractionListSerializer):
         
     def get_longitude(self, instance):
         return str(instance.location.coords[1])
+
+
+class ChosenAttractionSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = ChoseAttraction
+        fields = ('attraction', 'id')
+
+
+class MakeRouteSerializer(serializers.Serializer):
+    lat = serializers.FloatField()
+    lng = serializers.FloatField()
+
+
+class RouteListSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    created_at = serializers.DateTimeField(read_only=True)

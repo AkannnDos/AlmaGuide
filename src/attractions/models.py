@@ -70,11 +70,28 @@ class ChoseAttraction(BaseModel):
     attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE,
                                    verbose_name=_('Attraction'),
                                    related_name='users_chosen')
+    route = models.ForeignKey('Route', on_delete=models.CASCADE,
+                              verbose_name=_('Route'), blank=True, null=True,
+                              related_name='attractions')
     
     class Meta:
         verbose_name = _('Attraction chosen')
         verbose_name_plural = _('Attractions choosen')
         db_table = 'chosen_attraction'
+
+
+class Route(BaseModel):
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE,
+                             verbose_name=_('User'),
+                             related_name='routes')
+    name_en = models.CharField(max_length=255, verbose_name=_('Name EN'))
+    name_ru = models.CharField(max_length=255, verbose_name=_('Name RU'))
+    name_kk = models.CharField(max_length=255, verbose_name=_('Name KK'))
+    
+    class Meta:
+        verbose_name = _('Route')
+        verbose_name_plural = _('Routes')
+        db_table = 'route'
 
 
 @receiver(post_save, sender=Attraction)

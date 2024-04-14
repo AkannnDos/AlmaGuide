@@ -6,23 +6,27 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from drf_yasg.utils import swagger_auto_schema
 
+from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
 from attractions.filters import AttractionFilterSet
-from attractions.models import Attraction, Detail
+from attractions.models import Attraction, ChoseAttraction, Detail, Route
 from attractions.serializers import (
-    AttractionListSerializer, AttractionDetailSerializer
+    AttractionListSerializer, AttractionDetailSerializer,
+    ChosenAttractionSerializer, MakeRouteSerializer, RouteListSerializer
 )
 from utils.manual_parameters import QUERY_LATITUDE, QUERY_LONGITUDE
 
 
 class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
+    """ Actions with attractions """
     serializer_class = AttractionListSerializer
     permission_classes = (AllowAny, )
     filterset_class = AttractionFilterSet
@@ -37,6 +41,8 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return AttractionDetailSerializer
+        if self.action == 'chose_attraction':
+            return ChosenAttractionSerializer
         return super().get_serializer_class()
 
     def get_queryset(self):
@@ -88,3 +94,104 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
         self.longitude = float(query_params.get('lng'))
         instance = get_object_or_404(self.get_queryset(), **{'is_main': True})
         return Response(self.get_serializer(instance).data)
+
+
+class FavouriteViewSet(ListModelMixin, GenericViewSet):
+    """ Actions with favourite """
+    serializer_class = AttractionListSerializer
+    permission_classes = (IsAuthenticated, )
+
+    # defaul values
+    latitude = 43.237099
+    longitude = 76.906639
+
+    def get_serializer_class(self):
+        if self.action == 'chose_attraction':
+            return ChosenAttractionSerializer
+        return super().get_serializer_class()
+    
+    def get_queryset(self):
+        user_location = Point(self.longitude, self.latitude, srid=4326)
+        return Attraction.objects.filter(
+            users_chosen__user=self.request.user,
+            users_chosen__route__isnull=True
+        ).annotate(
+            name=F(f'name_{self.request.LANGUAGE_CODE}'),
+            description=F(f'description_{self.request.LANGUAGE_CODE}'),
+            distance=Distance('location', user_location),
+        ).select_related(
+            'subcategory__category'
+        ).order_by('distance')
+
+    @action(methods=['post'], detail=False, url_name='choose',
+            url_path='choose')
+    def chose_attraction(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @swagger_auto_schema(
+        manual_parameters=[QUERY_LATITUDE, QUERY_LONGITUDE]
+    )
+    def list(self, request, *args, **kwargs):
+        query_params = request.query_params.dict()
+        self.latitude = float(query_params.get('lat'))
+        self.longitude = float(query_params.get('lng'))
+        return super().list(request, *args, **kwargs)
+    
+    @action(methods=['delete'], detail=True, url_name='remove-chosen',
+            url_path='chosen')
+    def remove_from_chosen(self, request, *args, **kwargs):
+        pk = kwargs['pk']
+        ChoseAttraction.objects.filter(user=request.user,
+                                       attraction_id=pk).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RouteViewSet(ListModelMixin, GenericViewSet):
+    serializer_class = RouteListSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get_serializer_class(self):
+        if self.action == 'make_route':
+            return MakeRouteSerializer
+        return super().get_serializer_class()
+
+    def get_queryset(self):
+        return Route.objects.filter(
+            user=self.request.user
+        ).annotate(
+            name=F(f'name_{self.request.LANGUAGE_CODE}'),
+        ).order_by('-created_at')
+    
+    @action(methods=['post'], detail=False, url_name='make-routes',
+            url_path='make')
+    def make_route(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user_location = Point(serializer.validated_data['lat'],
+                              serializer.validated_data['lng'], srid=4326)
+
+        chosen_attractions = ChoseAttraction.objects.annotate(
+            distance=Distance('attraction__location', user_location),
+        ).filter(
+            user=request.user,
+            route__isnull=True,
+        ).select_related(
+            'attraction'
+        ).order_by('distance')
+        
+        last = chosen_attractions.last()
+        if last:
+            route = Route.objects.create(
+                user=request.user,
+                name_en=last.attraction.name_en,
+                name_ru=last.attraction.name_ru,
+                name_kk=last.attraction.name_kk
+            )
+            chosen_attractions.update(route=route)
+            return Response({'message': 'created'})
+        raise PermissionDenied
+    
+
