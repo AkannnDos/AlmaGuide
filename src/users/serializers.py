@@ -29,3 +29,16 @@ class SignUpResponseSerializer(serializers.Serializer):
 class UserSerializer(serializers.Serializer):
     full_name = serializers.CharField()
     photo = serializers.ImageField()
+
+
+class ForgotEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class VerifyOtpSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.IntegerField()
+
+
+class ChangePasswordlSerializer(serializers.Serializer):
+    password = serializers.CharField()

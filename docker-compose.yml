@@ -26,6 +26,40 @@ services:
       - local_postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
+  
+  redis:
+    image: redis:7.2.4
+    container_name: redis
+    restart: always
+    volumes:
+      - local_redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+  
+  celery-worker:
+    image: alma-back
+    command: celery -A config worker -l INFO
+    container_name: alma-celery-worker
+    volumes:
+      - ./src:/app
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - backend
+
+  celery-beat:
+    image: alma-back
+    command: celery -A config beat -l INFO
+    container_name: alma-celery-beat
+    volumes:
+      - ./src:/app
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - backend
 
 volumes:
   local_postgres_data: {}
+  local_redis_data: {}
