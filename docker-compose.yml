@@ -16,6 +16,8 @@ services:
       - db
     volumes:
       - ./src:/app
+      - local_media_data:/media
+      - local_static_data:/static
     command: /startup
 
   db:
@@ -63,3 +65,5 @@ services:
 volumes:
   local_postgres_data: {}
   local_redis_data: {}
+  local_media_data: {}
+  local_static_data: {}
