@@ -36,7 +36,8 @@ class CustomRangeFilter(filters.Filter):
 class AttractionFilterSet(filters.FilterSet):
 
     avg_rate = CustomRangeFilter()
+    category = filters.CharFilter(field_name='subcategory__category_id')
 
     class Meta:
         model = Attraction
-        fields = ('subcategory', 'avg_rate')
+        fields = ('subcategory', 'avg_rate', '')

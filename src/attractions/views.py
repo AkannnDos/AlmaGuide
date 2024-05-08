@@ -9,7 +9,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
@@ -31,8 +31,16 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     serializer_class = AttractionListSerializer
     permission_classes = (AllowAny, )
     filterset_class = AttractionFilterSet
-    filter_backends = (DjangoFilterBackend, OrderingFilter,)
+    filter_backends = (DjangoFilterBackend, OrderingFilter, SearchFilter)
     ordering_fields = ('avg_rate', 'name', 'distance')
+    search_fields = (
+        'name_en',
+        'name_ru',
+        'name_kk',
+        'description_en',
+        'description_ru',
+        'description_kk',
+    )
 
 
     # defaul values
