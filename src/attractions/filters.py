@@ -40,4 +40,4 @@ class AttractionFilterSet(filters.FilterSet):
 
     class Meta:
         model = Attraction
-        fields = ('subcategory', 'avg_rate', '')
+        fields = ('subcategory', 'avg_rate', 'category')
