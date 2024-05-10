@@ -181,7 +181,7 @@ class RouteViewSet(ListModelMixin, GenericViewSet):
         return super().get_serializer_class()
 
     def get_queryset(self):
-        if not self.request.is_authenticated:
+        if not self.request.user.is_authenticated:
             return Route.objects.none()
         return Route.objects.filter(
             user=self.request.user
