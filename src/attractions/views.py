@@ -1,6 +1,7 @@
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
-from django.db.models import Prefetch, F
+from django.db.models import Prefetch, F, Count, Q, Case, When, Value, \
+    BooleanField
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -62,7 +63,21 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
             'subcategory__category'
         )
         if self.action == 'retrieve':
-            return qs.prefetch_related(
+            return qs.alias(
+                favourite_count=Count(
+                    'users_chosen__id',
+                    filter=(
+                        Q(users_chosen__user=self.request.user) & 
+                        Q(users_chosen__route__isnull=True)
+                    )
+                )
+            ).annotate(
+                is_favourite=Case(
+                    When(favourite_count__gt=0,
+                         then=Value(True, output_field=BooleanField())),
+                    default=Value(False, output_field=BooleanField())
+                )
+            ).prefetch_related(
                 Prefetch(
                     'details',
                     queryset=Detail.objects.order_by().annotate(
@@ -166,6 +181,8 @@ class RouteViewSet(ListModelMixin, GenericViewSet):
         return super().get_serializer_class()
 
     def get_queryset(self):
+        if not self.request.is_authenticated:
+            return Route.objects.none()
         return Route.objects.filter(
             user=self.request.user
         ).annotate(
