@@ -99,7 +99,7 @@ class ForgotPasswordViewSet(ViewSet):
                     'refresh': str(refresh),
                     'access': str(refresh.access_token)
                 })
-            return ValidationError({'detail': _('Incorrect OTP')})
+            raise ValidationError({'detail': _('Incorrect OTP')})
         except User.DoesNotExist:
             raise ValidationError({'detail': _('User not found')})
         
