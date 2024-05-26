@@ -84,6 +84,16 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
                         name=F(f'name_{self.request.LANGUAGE_CODE}'),
                         value=F(f'value_{self.request.LANGUAGE_CODE}'),
                     )
+                ),
+                Prefetch(
+                    'similar_attractions',
+                    queryset=Attraction.objects.all().annotate(
+                        name=F(f'name_{self.request.LANGUAGE_CODE}'),
+                        description=F(f'description_{self.request.LANGUAGE_CODE}'),
+                        distance=Distance('location', user_location),
+                    ).select_related(
+                        'subcategory__category'
+                    )
                 )
             )
         return qs

@@ -39,6 +39,7 @@ class AttractionDetailSerializer(AttractionListSerializer):
     latitude = serializers.SerializerMethodField()
     longitude = serializers.SerializerMethodField()
     is_favourite = serializers.BooleanField()
+    similar_attractions = AttractionListSerializer(many=True)
 
     def get_latitude(self, instance):
         return str(instance.location.coords[0])
