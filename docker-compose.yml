@@ -16,8 +16,8 @@ services:
       - db
     volumes:
       - ./src:/app
-      - local_media_data:/media
-      - local_static_data:/static
+      - /var/www/media:/media
+      - /var/www/static:/static
     command: /startup
 
   db:

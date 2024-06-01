@@ -37,7 +37,7 @@ class Attraction(BaseGeoModel):
                                         verbose_name=_('Show on main page'),
                                         help_text=_('there can be only 2 '
                                                     'checked in one subcategory'))
-    similar_attractions = models.ManyToManyField('self', symmetrical=True,
+    similar_attractions = models.ManyToManyField('self', blank=True, symmetrical=True,
                                                  related_name='similars',
                                                  verbose_name=_('Similar Attractions'))
 
