@@ -1,7 +1,7 @@
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
 from django.db.models import Prefetch, F, Count, Q, Case, When, Value, \
-    BooleanField
+    BooleanField, IntegerField
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -63,14 +63,18 @@ class AttractionViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
             'subcategory__category'
         )
         if self.action == 'retrieve':
-            return qs.alias(
-                favourite_count=Count(
+            if self.request.user.is_authenticated:
+                favourite_count = Count(
                     'users_chosen__id',
                     filter=(
                         Q(users_chosen__user=self.request.user) & 
                         Q(users_chosen__route__isnull=True)
                     )
                 )
+            else:
+                favourite_count = Value(0, output_field=IntegerField())
+            return qs.alias(
+                favourite_count=favourite_count
             ).annotate(
                 is_favourite=Case(
                     When(favourite_count__gt=0,
