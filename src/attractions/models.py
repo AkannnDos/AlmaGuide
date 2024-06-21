@@ -109,7 +109,7 @@ def after_attraction_save(sender, instance, created, **kwargs):
         # Если существует другие объекты с полем is_on_main, то меняем старую по дате обновления на False
         # Чтобы всегда были только две таких объектов в пределах подкатегории
         another_attractions = Attraction.objects.filter(
-            is_on_main=True).exclude(pk=instance.pk).order_by('updated_at')
+            is_on_main=True, subcategory_id=instance.subcategory_id).exclude(pk=instance.pk).order_by('updated_at')
         if another_attractions.count() >= 2:
             # если таких объектов больше или ровно 2, то старую меням на False
             to_change = another_attractions.first()
