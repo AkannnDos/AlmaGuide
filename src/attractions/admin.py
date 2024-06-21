@@ -14,8 +14,9 @@ class DetailInline(admin.TabularInline):
 
 @admin.register(Attraction)
 class AttractionAdmin(geoadmin.GISModelAdmin):
-    list_display = ('id', 'get_name', 'is_main', 'avg_rate', 'created_at')
-    list_display_links = ('id', 'get_name', 'is_main', 'avg_rate', 'created_at')
+    list_display = ('id', 'get_name', 'is_main', 'avg_rate', 'created_at', 'is_on_main')
+    list_display_links = ('id', 'get_name', 'is_main', 'avg_rate', 'created_at', 'is_on_main')
+    list_filter = ('is_main', 'is_on_main')
     inlines = [DetailInline]
     filter_horizontal = ('similar_attractions',)
 
